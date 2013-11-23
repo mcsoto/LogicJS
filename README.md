@@ -73,7 +73,7 @@ function grandfather(x,y) {
 }
 
 //who is father of bob?
-run(father(x,y), x) //[mcbob]
+run(father(x,'bob'), x) //[mcbob]
 //who is grandfather of who?
 run(grandfather(x,y), [x,y]) //[[mcbob, bill]]
 ```
