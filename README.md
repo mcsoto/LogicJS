@@ -68,7 +68,7 @@ function father(x,y) {
 }
 
 function grandfather(x,y) {
-  var z = lvar() //dummy variable
+	var z = lvar() //dummy variable
 	return and(father(x,z), father(z,y))
 }
 
