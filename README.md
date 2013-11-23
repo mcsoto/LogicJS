@@ -45,9 +45,9 @@ g2 = and(
 		eq(2,y))
 )
 
-//get only the first 2 values 
+//get only the first 2 answers
 run(g2, [x,y], 2) //[ [1, 1], [1, 2] ]
-//get all values
+//get all answers
 run(g2, [x,y]) //[ [1, 1], [1, 2], [2, 1], [2, 2], [3, 1], [3, 1] ]
 ```
 
@@ -113,4 +113,4 @@ LogicJS is based on MiniKanren/SICP.
 * **Bindings** associate a variable to a value (e.g. X=2).
 * **Frames** are lists of bindings.
 * **Streams** are similar to lists, but they are evaluated on the fly and thus are potentially infinite.
-* **Goals** take a frame as an input and return a stream (since a goal can have zero or infinite answers).
+* **Goals** take a frame as input and return a stream (since a goal can have zero or infinite answers).
