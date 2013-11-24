@@ -51,10 +51,7 @@ run(g2, [x,y], 2) //[ [1, 1], [1, 2] ]
 run(g2, [x,y]) //[ [1, 1], [1, 2], [2, 1], [2, 2], [3, 1], [3, 1] ]
 ```
 
-Composite Goals
----------------
-
-Programmers may create their own goals by combining primitive goals such as *or*, *and*, *eq*.
+Programmers may create their own goals by combining primitive goals such as *or*, *and* and *eq*.
 
 ```javascript
 
@@ -62,8 +59,8 @@ function father(x,y) {
 	//mcbob is father of bob
 	//bob is father of bill
 	return or(
-		and(eq(x,'mcbob'), eq(y,'bob'))
-		,and(eq(x,'bob'), eq(y,'bill'))
+		and(eq(x,'mcbob'), eq(y,'bob')),
+		and(eq(x,'bob'), eq(y,'bill'))
 	)
 }
 
@@ -73,9 +70,16 @@ function grandfather(x,y) {
 }
 
 //who is father of bob?
-run(father(x,'bob'), x) //[mcbob]
+run(father(x,'bob'), x) //['mcbob']
 //who is grandfather of who?
-run(grandfather(x,y), [x,y]) //[[mcbob, bill]]
+run(grandfather(x,y), [x,y]) //[ ['mcbob', 'bill'] ]
+```
+
+The win and fail goals simply succeed/fail.
+
+```javascript
+run(logic.win, x) //[ undefined ]
+run(logic.fail, x) //[]
 ```
 
 Pattern Matching
@@ -113,4 +117,4 @@ LogicJS is based on MiniKanren/SICP.
 * **Bindings** associate a variable to a value (e.g. X=2).
 * **Frames** are lists of bindings.
 * **Streams** are similar to lists, but they are evaluated on the fly and thus are potentially infinite.
-* **Goals** take a frame as input and return a stream (since a goal can have zero or infinite answers).
+* **Goals** take a frame as input and return a stream of frames (since a goal can have zero or infinite answers).

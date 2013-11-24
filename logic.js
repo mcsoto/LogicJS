@@ -5,8 +5,7 @@ function assert(x,str) {
 	if (x===false) throw new Error(str)
 }
 
-var root = this
-	,logic = {}
+var logic = {}
 
 	
 /*
@@ -24,7 +23,6 @@ Frame.prototype = {
 		var s = this
 		return typeof s.rest === 'undefined'
 	}
-	
 	,append : function (s2) {
 		var s1 = this
 		if (s1.is_empty()) 
@@ -39,7 +37,6 @@ Frame.prototype = {
 		else
 			return logic.make_frame(s1.first, s2.interleave(s1.rest));
 	}
-
 	,forEach : function (f) {
 		var s = this
 		if(s.is_empty()) return;
@@ -48,7 +45,6 @@ Frame.prototype = {
 			s.rest.forEach(f)
 		}
 	}
-	
 	,foldr : function (f, initial) {
 		var s=this
 		if (s.is_empty()) {
@@ -58,7 +54,6 @@ Frame.prototype = {
 			return f(s.first, s.rest.foldr(f, initial))
 		}
 	}
-
 	,map : function (f) {
 		var s=this
 		if(s.is_empty())
@@ -68,11 +63,9 @@ Frame.prototype = {
 			return logic.make_frame(f(s.first), _rest);
 		}
 	 }
-
 	,extend : function (val) {
 		return logic.make_frame(val, this)
 	}
-	
 	,toString : function() {
 		var str = '|'
 		var s=this
@@ -86,13 +79,11 @@ Frame.prototype = {
 	,write : function () {
 		write(this.toString())
 	}
-	
 	,lookup_binding_helper : function (frame, variable) {
 		if(frame===EMPTY_FRAME) return false
 		else if(frame.first.variable===variable) return frame.first
 		else return frame.rest.lookup_binding(variable)
 	}
-
 	,lookup_binding : function (variable) {
 		return this.lookup_binding_helper(this, variable)
 	}
@@ -113,7 +104,6 @@ Stream.prototype = {
 		var s = this
 		return typeof s.rest === 'undefined'
 	}
-		
 	,iterate : function (f, j, i) {
 		var s = this
 		i = i||0
@@ -123,7 +113,6 @@ Stream.prototype = {
 			s.rest().iterate(f,j,i+1)
 		}
 	}
-	
 	,forEach : function (f) {
 		var s = this
 		if(s.is_empty()) return;
@@ -132,7 +121,6 @@ Stream.prototype = {
 			s.rest().iterate(f)
 		}
 	}
-	
 	,foldr : function (f, initial) {
 		var s=this
 		if (s.is_empty()) {
@@ -142,7 +130,6 @@ Stream.prototype = {
 			return f(s.first, s.rest().foldr(f, initial))
 		}
 	}
-
 	,map : function (f) {
 		var s=this
 		if(s.is_empty())
@@ -152,8 +139,7 @@ Stream.prototype = {
 			return logic.make_stream(f(s.first), function() { return _rest; });
 		}
 	 }
-	 	
-	,flatten : function () {
+	 ,flatten : function () {
 		var s = this
 		if (s.is_empty())
 			return s
@@ -165,7 +151,6 @@ Stream.prototype = {
 		else
 			return logic.make_stream(s.first).append(s.rest().flatten())
 	}
-	
 	,append : function (s2) {
 		var s1 = this
 		if (s1.is_empty()) 
@@ -173,7 +158,6 @@ Stream.prototype = {
 		else
 			return logic.make_stream(s1.first, function() { return s1.rest().append(s2); });
 	}
-
 	,interleave : function (s2) {
 		var s1 = this
 		if (s1.is_empty())
@@ -183,12 +167,10 @@ Stream.prototype = {
 				return s2.interleave(s1.rest());
 			});
 	}
-
 	,extend : function (val) {
 		var frame=this
 		return logic.make_stream(val, function() { return frame; });
 	}
-
 	,toString : function() {
 		var str = '('
 		var s=this
@@ -204,7 +186,7 @@ Stream.prototype = {
 	}
 }
 
-/* 
+/*
 	bindings
 */
 
@@ -333,6 +315,8 @@ function walk(variable, frame) {
 		return variable
 }
 
+logic.walk = walk
+
 /*
 	a goal/relation takes a frame and returns a stream of frames (an empty stream stands for a 'fail'/'false' goal)
 */
@@ -391,7 +375,7 @@ logic.run = function (g, v, n) {
 	//runs goal getting the first n results of variables
 	//n is optional (n=n or infinity)
 	//v is variable or array of variables
-	assert(logic.is_lvar(v) || logic.is_array(v), '#2 is not variable/array')
+	assert(logic.is_lvar(v) || logic.is_array(v), '#2 must be variable/array')
 	n = ((typeof n==='undefined')?(1/0):n)
 	var s = g(logic.nil)
 		,result = []
@@ -415,8 +399,6 @@ logic.run = function (g, v, n) {
 	}
 	return result
 }
-
-logic.walk = walk
 
 //export module to nodejs/browser
 if (typeof exports !== 'undefined') {
