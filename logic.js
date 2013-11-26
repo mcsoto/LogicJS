@@ -11,6 +11,7 @@ inherit = function (P,Q){
 }
 
 var logic = {}
+var write = ((typeof console === 'object') && (typeof console.log !== 'undefined')) ? console.log : function(){}
 
 /*
 	lists
