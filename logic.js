@@ -5,13 +5,257 @@ function assert(x,str) {
 	if (x===false) throw new Error(str)
 }
 
-inherit = function (P,Q){
-	P.prototype = new Q()
-	P.prototype.constructor = P
-}
-
 var logic = {}
 var write = ((typeof console === 'object') && (typeof console.log !== 'undefined')) ? console.log : function(){}
+
+var inf = 1/0 //we start with a division by zero. this is a good start.
+var minus_inf = (-1)*inf
+
+/*
+	domains (for clp)
+*/
+
+REAL_DOMAIN = make_domain(minus_inf, inf)
+
+function Domain(min, max) {
+	this.min=min
+	this.max=max
+}
+
+Domain.prototype.toString = function() {
+	var str = '['+this.min+', '+this.max+']'
+	return str
+}
+
+Domain.prototype.is_member = function(v) {
+	var d1 = this
+	return v>=d.min && v<=d.max
+}
+
+Domain.prototype.add = function(d2) {
+	var d1 = this
+	return make_domain(d1.min+d2.min, d1.max+d2.max)
+}
+
+Domain.prototype.sub = function(d2) {
+	var d1 = this
+	return make_domain(d1.min-d2.max, d1.max-d2.min)
+}
+
+Domain.prototype.mul = function(d2) {
+	var d1 = this
+		,obj = [d1.min*d2.min, d1.min*d2.max, d1.max*d2.min, d1.max*d2.max]
+		,min = Math.min.apply(null, obj)
+		,max = Math.max.apply(null, obj)
+	return make_domain(min, max)
+}
+
+Domain.prototype.div = function(d2) {
+	var d1 = this
+		,obj = [d1.min/d2.min, d1.min/d2.max, d1.max/d2.min, d1.max/d2.max]
+		,min = Math.min.apply(null, obj)
+		,max = Math.max.apply(null, obj)
+	return make_domain(min, max)
+}
+
+function make_domain(min, max) {
+	return new Domain(min, max)
+}
+
+function intersection(d1, d2) {
+	var min, max
+	min = (d1.min<d2.min) ? d2.min : d1.min;
+	max = (d1.max>d2.max) ? d2.max : d1.max;
+	if(max<min) return false;
+	return make_domain(min, max)
+}
+
+function get_domain(pack, x) {
+	if(logic.is_lvar(x)) {
+		var d = pack.lookup_domain_binding(x)
+		if(!d)
+			return REAL_DOMAIN
+		return d.val
+	}
+	else {
+		return make_domain(x, x)
+	}
+}
+
+/*
+	constraints	
+
+*/
+
+function Constraint(fn, args, name) {
+	this.fn = fn
+	this.args = args||[]
+	this.name = name||''
+}
+
+Constraint.prototype.toString = function() {
+	var str = '['+this.name+' '+this.args+']'
+	return str
+}
+
+//calls constraint
+//c->proc takes a package and returns a modified package or false 
+Constraint.prototype.proc = function(p) {
+	var f = this.fn.apply(null, this.args)
+	return f(p)
+}
+
+function make_constraint(fn, args, name) {
+	assert(typeof fn === 'function', '#1 of make-constraint is function')
+	assert(typeof args === 'object', '#2 of make-constraint is array')
+	return new Constraint(fn, args, name)
+}
+
+//this returns false (in case of inconsistency) or a modified package
+function run_constraints(store, p0) {
+	var p = p0
+	var cs = store
+	while(!cs.is_empty()) {
+		var c = cs.first
+		p = c.proc(p)
+		if(p===false) 
+			return false
+		cs = cs.rest
+	}
+	return p
+}
+
+/*
+	clp for reals
+	
+	The clp operations (such +-/* and <=, <, >, >=, !=, dom) create a binding of a variable to a domain, which is added to package->domains after checking for consistency. When eq creates a new binding, we check the variable's domain (if any) for consistency before extending package->frame.
+	
+*/
+
+function less_equal_c(x,y) {
+	return function (p) {
+		var wx = walk(x, p.frame), wy = walk(y, p.frame)
+			,dx = get_domain(p, wx), dy = get_domain(p, wy)
+		var di = intersection(dx, make_domain(minus_inf, dy.max))
+		if(di) {
+			var di2 = intersection(dy, make_domain(dx.min, inf))
+			if(di2) {
+				var p1 = p.extend_domain(x, di)
+				var p2 = p1.extend_domain(y, di2)
+				return p2
+			}
+			else
+				return false
+		}
+		else
+			return false
+	}
+}
+
+function add_c(x,y,z) {
+	//X + Y = Z
+	//z=x+y
+	//x=z-y
+	//y=z-x
+	return function (p) {
+		var wx = walk(x, p.frame), wy = walk(y, p.frame), wz = walk(z, p.frame)
+			,dx = get_domain(p, wx), dy = get_domain(p, wy), dz = get_domain(p, wz)
+		dz = intersection(dz, dx.add(dy))
+		dx = intersection(dx, dz.sub(dy))
+		dy = intersection(dy, dz.sub(dx))
+		if(dx&&dy&&dz)
+			return p.extend_domain(x,dx).extend_domain(y,dy).extend_domain(z,dz)
+		else
+			return false
+	}
+}
+
+function mul_c(x,y,z) {
+	//X * Y = Z
+	//z=x*y
+	//x=z/y
+	//y=z/x
+	return function (p) {
+		var wx = walk(x, p.frame), wy = walk(y, p.frame), wz = walk(z, p.frame)
+			,dx = get_domain(p, wx), dy = get_domain(p, wy), dz = get_domain(p, wz)
+		//write(dx,dy,dz)
+		dz = intersection(dz, dx.mul(dy))
+		//write('dz',dz)
+		if(dz) {
+			dx = intersection(dx, dz.div(dy))
+			//write(dx)
+			if(dx) {
+				dy = intersection(dy, dz.div(dx))
+				if(dy) {
+					return p.extend_domain(x,dx).extend_domain(y,dy).extend_domain(z,dz)
+				}
+			}
+		}
+		return false
+	}
+}
+
+clpr = {
+	dom : function (x, min, max) {
+		assert(typeof min==='number' && typeof max==='number', '#2-3 arguments of dom must be number.')
+		return function (p) {
+			var d = make_domain(min, max)
+				,wx = walk(x, p.frame)
+				,dx = get_domain(p, x)
+				,di = intersection(dx, d)
+			//di returns false when it fails
+			//in that case, the goal will fail
+			if(di)
+				return logic.win(p.extend_domain(x, di))
+			else
+				return logic.fail()
+		}
+	}
+	,add : function (x, y, z) {
+		return goal_construct(add_c, [x,y,z], '+')
+	}
+	,sub : function (x, y, z) {
+		return clpr.add(z, y, x) //x-y=z is the same as x=z+y
+	}
+	//todo: finish division
+	/*,mul : function (x, y, z) {
+		return goal_construct(mul_c, [x,y,z], '*')
+	}
+	,div : function (x, y, z) {
+		return clpr.mul(z, y, x) //x/y=z is the same as x=z*y
+	}*/ 
+	//return less_equal_c(x,y)
+	,less_equal : function (x, y) {
+		return goal_construct(less_equal_c, [x, y], '<=')
+	}
+	,make_domain : make_domain
+	,intersection : intersection
+	,get_domain : get_domain
+}
+
+//constructs a goal from constraint parameters
+function goal_construct(fn, args, name) {
+	var c = make_constraint(fn,args,name)
+	return function(p) {
+		var pc = p.extend_constraint(c)
+			,p2 = c.proc(pc)
+		if(p2)
+			return logic.win(p2)
+		else
+			return logic.fail()
+	}
+}
+
+clpr.REAL_DOMAIN = REAL_DOMAIN
+
+logic.dom = clpr.dom
+logic.add = clpr.add
+logic.sub = clpr.sub
+logic.mul = clpr.mul
+logic.div = clpr.div
+logic.less_equal = clpr.less_equal
+logic.clpr = clpr
+
 
 /*
 	lists
@@ -88,12 +332,13 @@ List.prototype = {
 
 
 /*
-	packages hold a **frame** and a **constraint store**
+	packages hold a **frame**, a **constraint store** and a list of **domains**
 */
 
-function Package(f, cs) {
+function Package(f, cs, d) {
 	this.frame = f
 	this.store = cs
+	this.domains = d
 	this.type = 'package'
 }
 
@@ -107,24 +352,50 @@ Package.prototype.lookup_binding = function (variable) {
 	return this.lookup_binding_helper(this.frame, variable)
 }
 
+Package.prototype.lookup_domain_binding = function (variable) {
+	return this.lookup_binding_helper(this.domains, variable)
+}
+
 Package.prototype.is_empty = function (arguments) {
 	return this.frame.is_empty(arguments)
 }
 
-Package.prototype.extend_frame = function (f) {
-	return logic.make_package(f, this.store)
+Package.prototype.set_frame = function (f) {
+	return logic.make_package(f, this.store, this.domains)
 }
 
-Package.prototype.extend_store = function (cs) {
-	return logic.make_package(this.frame, cs)
+/*Package.prototype.set_store = function (cs) {
+	return logic.make_package(this.frame, cs, this.domains)
+}
+
+Package.prototype.set_domains = function (ds) {
+	return logic.make_package(this.frame, this.store, ds)
+}*/
+
+Package.prototype.extend_binding = function (variable, val) {
+	return logic.make_package(this.frame.extend(logic.make_binding(variable, val), this.store, this.domains), this.store, this.domains)
+}
+
+Package.prototype.extend_domain = function (v,d) {
+	if(d.min===d.max) {
+		if(logic.is_lvar(v))
+			return this.extend_binding(v, d.min)
+		else
+			return this
+	}
+	return new Package(this.frame, this.store, this.domains.extend(logic.make_binding(v, d)))
+}
+
+Package.prototype.extend_constraint = function (c) {
+	return logic.make_package(this.frame, this.store.extend(c), this.domains)
 }
 
 Package.prototype.extend = function (arguments) {
-	return logic.make_package(this.frame.extend(arguments), this.store)
+	return logic.make_package(this.frame.extend(arguments), this.store, this.domains)
 }
 
 Package.prototype.toString = function() {
-	var str = '{'+this.frame.toString()+', '+this.store+'}'
+	var str = '{' + (this.frame.is_empty()?'':this.frame.toString()+(this.store.is_empty()?'':', ')) + (this.store.is_empty()?'':this.store+', ') + (this.domains.is_empty()?'':this.domains) + '}'
 	return str
 }
 
@@ -248,7 +519,7 @@ Binding.prototype.toString = function () { return (typeof this.variable.name!=='
 
 var EMPTY_STREAM = new Stream(undefined, undefined)
 var EMPTY_LIST = new List(undefined, undefined)
-var EMPTY_PACKAGE = new Package(EMPTY_LIST, EMPTY_LIST)
+var EMPTY_PACKAGE = new Package(EMPTY_LIST, EMPTY_LIST, EMPTY_LIST)
 
 logic.nil = EMPTY_PACKAGE //a goal needs a package; therefore it initially receives 'nil' (the first package)
 logic.EMPTY_STREAM = EMPTY_STREAM
@@ -307,13 +578,15 @@ logic.make_list = function (a,b) {
 	return new List(a,b)
 }
 
-logic.make_package = function (f, cs) {
-	assert(logic.is_list(f) && logic.is_list(cs), "#1 and #2 arguments of package must be list")
-	return new Package(f,cs)
+logic.make_package = function (f, cs, ds) {
+	assert(logic.is_list(f), '#1 argument of package must be list')
+	assert(logic.is_list(cs), '#2 argument of package must be list')
+	assert(logic.is_list(ds), '#3 argument of package must be list')
+	return new Package(f,cs,ds)
 }
 
 logic.unify = function (a, b, frame) {
-	if(frame===false) 
+	if(frame===false)
 		return false
 	a = walk(a, frame)	
 	b = walk(b, frame)
@@ -344,7 +617,7 @@ logic.unify = function (a, b, frame) {
 			}
 			return frame
 		}
-		else 
+		else
 			return false
 	}
 	else return false
@@ -381,8 +654,19 @@ logic.eq = function (a, b) { //'goal' version of unify
 	return function(p) {
 		var f = p.frame
 		var f2 = logic.unify(a, b, f)
-		if(f2) 
-			return logic.win(p.extend_frame(f2))
+		if(f2) {
+			//if(f!=f2 && !p.domains.is_empty() && (!intersection(get_domain(p, a), get_domain(p, b)))) //take care of constraints
+				//return logic.fail()
+			var p2 = p.set_frame(f2)
+			if(f==f2 || p.store.is_empty()) 
+				return logic.win(p2)
+			//check constraints first
+			var p3 = run_constraints(p2.store, p2)
+			if(p3)
+				return logic.win(p3)
+			else
+				return logic.fail()
+		}
 		else 
 			return logic.fail()
 	}
@@ -429,12 +713,20 @@ logic.between = function (a,b,x) {
 	return _between(a,b,x)
 }
 
+function get_answer(variable, pack) {
+	var result = pack.lookup_binding(variable).val
+	if(typeof result === 'undefined')
+		return pack.lookup_domain_binding(variable).val
+	else
+		return result
+}
+
 logic.run = function (g, v, n) {
 	//runs goal getting the first n results of variables
 	//n is optional (n=n or infinity)
 	//v is variable or array of variables
 	assert(logic.is_lvar(v) || logic.is_array(v), '#2 must be variable/array')
-	n = ((typeof n==='undefined')?(1/0):n)
+	n = ((typeof n==='undefined')?inf:n)
 	var s = g(logic.nil)
 		,result = []
 	for(var i=0; i<n && !s.is_empty();++i) {
@@ -442,14 +734,14 @@ logic.run = function (g, v, n) {
 			,frame = pack.frame
 		if(logic.is_lvar(v)) { //get variable into result
 			var v2 = walk(v, frame)
-			var _temp = logic.is_lvar(v2) ? pack.lookup_binding(v).val : v2
+			var _temp = logic.is_lvar(v2) ? get_answer(v, pack) : v2
 			result.push(_temp)
 		}
 		else { //get array of variables into result
 			var vals = []
 			for(var j=0;j<v.length;++j) {
 				var v2 = walk(v[j], frame)
-				var _temp = logic.is_lvar(v2) ? pack.lookup_binding(v2).val : v2
+				var _temp = logic.is_lvar(v2) ? get_answer(v2, pack) : v2
 				vals.push(_temp)
 			}
 			result.push(vals)

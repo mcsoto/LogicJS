@@ -141,3 +141,84 @@ r = logic.run(and(between(2,5,x),between(6,7,x)), [x,y])
 write(r)
 r = logic.run(father(x,y), [x,y])
 write(r)
+
+var dom = logic.dom
+	,add = logic.add
+	,sub = logic.sub
+	,mul = logic.mul
+	,div = logic.div
+	,less_equal = logic.clpr.less_equal
+	
+write('--')
+g = and(dom(x,0,5),dom(x,0,3))
+write(run(g,x))
+
+write('--')
+g = and(dom(x,0,3),dom(x,0,5))
+write(run(g,x))
+
+write('--')
+g = or( dom(x, 0, 3), dom(x, 1, 2))
+write(run(g,x))
+g = and(dom(x, 0, 4.2), dom(x, 1, 5))
+write(run(g,x))
+g = and(dom(x, 0, 3.4), dom(x, 4, 5))
+write(run(g,x))
+
+write('--constraints')
+g = less_equal(x,3)
+write(run(g,x))
+g(nil).write()
+
+g = and(dom(x,2,5), less_equal(x,3))
+write(run(g,x))
+
+g = and(less_equal(x,3), eq(x,2))
+write(run(g,x))
+
+g = and(less_equal(x,3), eq(x,5))
+write(run(g,x))
+
+g = and(eq(x,5), less_equal(x,3))
+write(run(g,x))
+
+write('--add')
+g = (add(2,1,x))
+write(run(g,x))
+
+g = and(add(x,1,z), eq(z,2))
+write(run(g,[x,y,z]))
+
+g = or(
+	and(add(x,1,z), eq(x,2)),
+	or(
+		and(sub(x,1,z), eq(x,2)),
+		and(sub(x,y,z), and(eq(x,2), eq(y,3)))
+	)
+)
+write(run(g,[x,y,z]))
+
+/*write('--mul')
+g = (mul(x,y,2))//and(eq(x,2), eq(y,3)))
+write(run(g,[x,y,z]))
+
+g = and(mul(x,y,2), eq(z,2))//and(eq(x,2), eq(y,3)))
+write(run(g,[x,y,z]))
+g(nil).write()
+
+g = or(
+	and(mul(x,2.5,z), eq(x,2)),
+	or(
+		and(div(x,3,z), eq(x,1)),
+		and(div(x,y,z), and(eq(x,2), eq(y,3)))
+	)
+)
+write(run(g,[x,y,z]))
+
+g = or(
+		and(div(x,3,z), eq(x,1)),
+		and(div(x,y,z), logic.win)//and(eq(x,2), eq(y,3)))
+	)
+write(run(g,[x,y,z]))
+
+*/
