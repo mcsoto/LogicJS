@@ -51,6 +51,9 @@ run(g2, [x,y], 2) //[ [1, 1], [1, 2] ]
 run(g2, [x,y]) //[ [1, 1], [1, 2], [2, 1], [2, 2], [3, 1], [3, 1] ]
 ```
 
+Goals
+-----
+
 Programmers may create their own goals by combining primitive goals such as *or*, *and* and *eq*.
 
 ```javascript
@@ -120,7 +123,7 @@ When not enough arguments are instantied, the system will propagate a *constrain
 var less_equal = logic.less_equal
 var write = console.log
 
-run(less_equal(1,2), x)[0] //[ undefined ]
+v = run(less_equal(1,2), x)[0]
 write(v) //undefined
 d = run(less_equal(x,2), x)[0]
 write(d.min, d.max) //-inf, 2
