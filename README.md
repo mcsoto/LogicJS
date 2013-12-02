@@ -75,7 +75,7 @@ run(father(x,'bob'), x) //['mcbob']
 run(grandfather(x,y), [x,y]) //[ ['mcbob', 'bill'] ]
 ```
 
-The win and fail goals simply succeed/fail.
+The *win* and *fail* goals simply succeed or not succeed.
 
 ```javascript
 run(logic.win, x) //[ undefined ]
@@ -109,12 +109,50 @@ g3 = eq(
 run(g3, [x,y,z]) //[] //cannot match this one
 ```
 
+Constraints
+-----------
+
+In pure logic programming, it doesn't matter which arguments of a goal have been instantiated.
+
+When not enough arguments are instantied, the system will propagate a *constraint* (such as "x is less than 2"). When it's still not possible to find a value for the variable, it'll return a *domain* with the possible values of that variable. This is called *constraint logic programming*.
+
+```javascript
+var less_equal = logic.less_equal
+
+v = run(less_equal(1,2), x)[0]
+write(v) //undefined
+d = run(less_equal(x,2), x)[0] 
+write(d.min, d.max) //-inf, 2
+d = run(less_equal(2,x), x)[0] 
+write(d.min, d.max) //2, inf
+d = run(less_equal(x,y), x])[0]
+write(d) //-inf, inf
+
+v = run(and(add(x,y,3), eq(y,1)), x])[0]
+write(v) //[ 2 ]
+```
+
+This works for the arithmetic relations.
+
+```javascript
+var add = logic.add, sub = logic.sub, mul = logic.mul, div = logic.div
+
+write(run(add(x,2,6), x), //[ 4 ]
+	run(sub(x,2,6), x), //[ 8 ]
+	run(mul(x,2,6), x), //[ 3 ]
+	run(div(x,2,6), x) //[ 12 ]
+)
+```
+
+An example of an impure goal included in LogicJS is *between*, which requires the first two arguments to be numbers.
+
+
 Implementation
 ==============
 
-LogicJS is based on MiniKanren/SICP.
+LogicJS' implementation is based on MiniKanren/SICP.
 
 * **Bindings** associate a variable to a value (e.g. X=2).
-* **Frames** are lists of bindings.
 * **Streams** are similar to lists, but they are evaluated on the fly and thus are potentially infinite.
-* **Goals** take a frame as input and return a stream of frames (since a goal can have zero or infinite answers).
+* **Packages** contain a list of bindings (sometimes called a *frame*) and a list of constraints. Logic programming without support for constraints might only use frames instead of packages.
+* **Goals** take a package as input and return a stream of packages (since a goal can have zero or infinite answers).
