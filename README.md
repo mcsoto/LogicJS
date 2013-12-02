@@ -118,12 +118,13 @@ When not enough arguments are instantied, the system will propagate a *constrain
 
 ```javascript
 var less_equal = logic.less_equal
+var write = console.log
 
-v = run(less_equal(1,2), x)[0]
+run(less_equal(1,2), x)[0] //[ undefined ]
 write(v) //undefined
-d = run(less_equal(x,2), x)[0] 
+d = run(less_equal(x,2), x)[0]
 write(d.min, d.max) //-inf, 2
-d = run(less_equal(2,x), x)[0] 
+d = run(less_equal(2,x), x)[0]
 write(d.min, d.max) //2, inf
 d = run(less_equal(x,y), x])[0]
 write(d) //-inf, inf
@@ -150,7 +151,7 @@ An example of an impure goal included in LogicJS is *between*, which requires th
 Implementation
 ==============
 
-LogicJS' implementation is based on MiniKanren/SICP.
+The implementation of LogicJS is based on MiniKanren/SICP.
 
 * **Bindings** associate a variable to a value (e.g. X=2).
 * **Streams** are similar to lists, but they are evaluated on the fly and thus are potentially infinite.
