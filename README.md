@@ -127,7 +127,7 @@ write(d.min, d.max) //-inf, 2
 d = run(less_equal(2,x), x)[0]
 write(d.min, d.max) //2, inf
 d = run(less_equal(x,y), x])[0]
-write(d) //-inf, inf
+write(d.min, d.max) //-inf, inf
 
 v = run(and(add(x,y,3), eq(y,1)), x])[0]
 write(v) //[ 2 ]
