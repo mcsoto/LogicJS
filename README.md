@@ -142,8 +142,8 @@ This works for the arithmetic relations.
 var add = logic.add, sub = logic.sub, mul = logic.mul, div = logic.div
 
 write(run(add(x,2,6), x), //[ 4 ]
-	run(sub(x,2,6), x), //[ 8 ]
-	run(mul(x,2,6), x), //[ 3 ]
+	run(sub(2,x,6), x), //[ -4 ]
+	run(mul(2,6,x), x), //[ 12 ]
 	run(div(x,2,6), x) //[ 12 ]
 )
 ```

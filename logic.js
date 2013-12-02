@@ -240,7 +240,6 @@ clpr = {
 	,div : function (x, y, z) {
 		return clpr.mul(z, y, x) //x/y=z is the same as x=z*y
 	}
-	//return less_equal_c(x,y)
 	,less_equal : function (x, y) {
 		return goal_construct(less_equal_c, [x, y], '<=')
 	}
