@@ -147,6 +147,7 @@ var dom = logic.dom
 	,sub = logic.sub
 	,mul = logic.mul
 	,div = logic.div
+	,make_domain = logic.clpr.make_domain
 	,less_equal = logic.clpr.less_equal
 	
 write('--')
@@ -198,27 +199,36 @@ g = or(
 )
 write(run(g,[x,y,z]))
 
-/*write('--mul')
-g = (mul(x,y,2))//and(eq(x,2), eq(y,3)))
+write('--mul')
+g = and(mul(x,y,2), logic.win)//and(eq(x,2), eq(y,3)))
 write(run(g,[x,y,z]))
 
-g = and(mul(x,y,2), eq(z,2))//and(eq(x,2), eq(y,3)))
+g = and(mul(x,y,z), and(eq(x,2), eq(y,3)))
 write(run(g,[x,y,z]))
-g(nil).write()
 
+write('--')
 g = or(
 	and(mul(x,2.5,z), eq(x,2)),
 	or(
 		and(div(x,3,z), eq(x,1)),
-		and(div(x,y,z), and(eq(x,2), eq(y,3)))
+		and(div(x,y,z), and(eq(x,2), eq(z,3)))
 	)
 )
 write(run(g,[x,y,z]))
 
 g = or(
-		and(div(x,3,z), eq(x,1)),
-		and(div(x,y,z), logic.win)//and(eq(x,2), eq(y,3)))
-	)
+	and(div(2,3,z), eq(z,1)),
+	and(div(x,y,z),logic.win)
+)
 write(run(g,[x,y,z]))
 
-*/
+g = or(
+	and(div(2,3,z), less_equal(z,2)),
+	and(div(x,y,z), and(less_equal(x,2), less_equal(y,2)))
+)
+write(run(g,[x,y,z]))
+
+write(run(less_equal(x,2), [x,y,z]))
+
+write(make_domain(2,5).div(make_domain(1, 1/0)))
+write(make_domain(2,5).div(make_domain(-1/0, 1/0)))

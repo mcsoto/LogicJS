@@ -52,9 +52,29 @@ Domain.prototype.mul = function(d2) {
 
 Domain.prototype.div = function(d2) {
 	var d1 = this
-		,obj = [d1.min/d2.min, d1.min/d2.max, d1.max/d2.min, d1.max/d2.max]
+	var min, max
+	if(d2.min<=0 && d2.max>=0) { //zero is involved.
+		if(d2.min===0 && d2.max===0) {
+			return false
+		}
+		else if(d2.min===0) {
+			max = inf
+			return make_domain(Math.min(d1.min/d2.max, d1.max/d2.max), inf)
+		}
+		else if(d2.max===0) {
+			min = minus_inf
+			return make_domain(minus_inf, Math.max(d1.min/d2.min, d1.max/d2.max) )
+		}
+	}
+	if(!(isFinite(d2.min)&&isFinite(d2.max))) { //infinity is involved...
+		if(d2.min===minus_inf && d2.max===inf) {
+			return REAL_DOMAIN
+		}
+	}
+	var obj = [d1.min/d2.min, d1.min/d2.max, d1.max/d2.min, d1.max/d2.max]
 		,min = Math.min.apply(null, obj)
 		,max = Math.max.apply(null, obj)
+	//write('obj',obj,d1,d2)
 	return make_domain(min, max)
 }
 
@@ -178,12 +198,9 @@ function mul_c(x,y,z) {
 	return function (p) {
 		var wx = walk(x, p.frame), wy = walk(y, p.frame), wz = walk(z, p.frame)
 			,dx = get_domain(p, wx), dy = get_domain(p, wy), dz = get_domain(p, wz)
-		//write(dx,dy,dz)
 		dz = intersection(dz, dx.mul(dy))
-		//write('dz',dz)
 		if(dz) {
 			dx = intersection(dx, dz.div(dy))
-			//write(dx)
 			if(dx) {
 				dy = intersection(dy, dz.div(dx))
 				if(dy) {
@@ -217,13 +234,12 @@ clpr = {
 	,sub : function (x, y, z) {
 		return clpr.add(z, y, x) //x-y=z is the same as x=z+y
 	}
-	//todo: finish division
-	/*,mul : function (x, y, z) {
+	,mul : function (x, y, z) {
 		return goal_construct(mul_c, [x,y,z], '*')
 	}
 	,div : function (x, y, z) {
 		return clpr.mul(z, y, x) //x/y=z is the same as x=z*y
-	}*/ 
+	}
 	//return less_equal_c(x,y)
 	,less_equal : function (x, y) {
 		return goal_construct(less_equal_c, [x, y], '<=')
