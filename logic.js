@@ -181,12 +181,16 @@ function add_c(x,y,z) {
 		var wx = walk(x, p.frame), wy = walk(y, p.frame), wz = walk(z, p.frame)
 			,dx = get_domain(p, wx), dy = get_domain(p, wy), dz = get_domain(p, wz)
 		dz = intersection(dz, dx.add(dy))
-		dx = intersection(dx, dz.sub(dy))
-		dy = intersection(dy, dz.sub(dx))
-		if(dx&&dy&&dz)
-			return p.extend_domain(x,dx).extend_domain(y,dy).extend_domain(z,dz)
-		else
-			return false
+		if(dz) {
+			dx = intersection(dx, dz.sub(dy))
+			if(dx) {
+				dy = intersection(dy, dz.sub(dx))
+				if(dy) {
+					return p.extend_domain(x,dx).extend_domain(y,dy).extend_domain(z,dz)
+				}
+			}
+		}
+		return false
 	}
 }
 
