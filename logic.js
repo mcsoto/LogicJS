@@ -154,7 +154,7 @@ function run_constraints(store, p0) {
 
 function less_equal_c(x,y) {
 	return function (p) {
-		var wx = walk(x, p.frame), wy = walk(y, p.frame)
+		var wx = p.walk(x), wy = p.walk(y)
 			,dx = get_domain(p, wx), dy = get_domain(p, wy)
 		var di = intersection(dx, make_domain(minus_inf, dy.max))
 		if(di) {
@@ -178,7 +178,7 @@ function add_c(x,y,z) {
 	//x=z-y
 	//y=z-x
 	return function (p) {
-		var wx = walk(x, p.frame), wy = walk(y, p.frame), wz = walk(z, p.frame)
+		var wx = p.walk(x), wy = p.walk(y), wz = p.walk(z)
 			,dx = get_domain(p, wx), dy = get_domain(p, wy), dz = get_domain(p, wz)
 		dz = intersection(dz, dx.add(dy))
 		if(dz) {
@@ -200,7 +200,7 @@ function mul_c(x,y,z) {
 	//x=z/y
 	//y=z/x
 	return function (p) {
-		var wx = walk(x, p.frame), wy = walk(y, p.frame), wz = walk(z, p.frame)
+		var wx = p.walk(x), wy = p.walk(y), wz = p.walk(z)
 			,dx = get_domain(p, wx), dy = get_domain(p, wy), dz = get_domain(p, wz)
 		dz = intersection(dz, dx.mul(dy))
 		if(dz) {
@@ -221,7 +221,7 @@ clpr = {
 		assert(typeof min==='number' && typeof max==='number', '#2-3 arguments of dom must be number.')
 		return function (p) {
 			var d = make_domain(min, max)
-				,wx = walk(x, p.frame)
+				,wx = p.walk(x)
 				,dx = get_domain(p, x)
 				,di = intersection(dx, d)
 			//di returns false when it fails
@@ -349,6 +349,24 @@ List.prototype = {
 	}
 }
 
+//I'm adding this to class List but 'walk' is only for frames
+List.prototype.walk = function (variable) {
+	var frame = this
+	var frame0 = frame
+	if(logic.is_lvar(variable)) {
+		while(!frame.is_empty()) {
+			var binding = frame.first
+			if(binding.variable===variable) {
+				return frame0.walk(binding.val)
+			}
+			frame = frame.rest
+		}
+		return variable
+	}
+	else
+		return variable
+}
+
 
 /*
 	packages hold a **frame**, a **constraint store** and a list of **domains**
@@ -420,6 +438,24 @@ Package.prototype.toString = function() {
 
 Package.prototype.write = function () {
 	write(this.toString())
+}
+
+//finds out what value a variable is associated with, e.g.
+//walk(x, |x=2|) ==> 2
+//walk(x, |x=y|) ==> y
+//walk(x, |x=y;y=w;w=2|) ==> 2
+//walk(x, |w=y|) ==> x
+Package.prototype.walk = function (variable) {
+	return this.frame.walk(variable)
+}
+
+Package.prototype.get_value = function (variable) {
+	var pack = this
+	var result = pack.lookup_binding(variable).val
+	if(typeof result === 'undefined')
+		return pack.lookup_domain_binding(variable).val
+	else
+		return result
 }
 
 /*
@@ -607,8 +643,8 @@ logic.make_package = function (f, cs, ds) {
 logic.unify = function (a, b, frame) {
 	if(frame===false)
 		return false
-	a = walk(a, frame)	
-	b = walk(b, frame)
+	a = frame.walk(a)
+	b = frame.walk(b)
 	if(a===b) 
 		return frame
 	else if(logic.is_lvar(a)) { //is variable
@@ -641,29 +677,6 @@ logic.unify = function (a, b, frame) {
 	}
 	else return false
 }
-
-function walk(variable, frame) {
-	//finds out what value a variable is associated with, e.g.
-	//walk(x, |x=2|) ==> 2
-	//walk(x, |x=y|) ==> y
-	//walk(x, |x=y;y=w;w=2|) ==> 2
-	//walk(x, |w=y|) ==> x
-	var frame0 = frame
-	if(logic.is_lvar(variable)) {
-		while(!frame.is_empty()) {
-			var binding = frame.first
-			if(binding.variable===variable) {
-				return walk(binding.val, frame0)
-			}
-			frame = frame.rest
-		}
-		return variable
-	}
-	else
-		return variable
-}
-
-logic.walk = walk
 
 /*
 	a goal/relation takes a package and returns a stream of packages (an empty stream stands for a 'fail'/'false' goal)
@@ -732,19 +745,11 @@ logic.between = function (a,b,x) {
 	return _between(a,b,x)
 }
 
-function get_answer(variable, pack) {
-	var result = pack.lookup_binding(variable).val
-	if(typeof result === 'undefined')
-		return pack.lookup_domain_binding(variable).val
-	else
-		return result
-}
-
 logic.run = function (g, v, n) {
 	//runs goal getting the first n results of variables
 	//n is optional (n=n or infinity)
 	//v is variable or array of variables
-	assert(logic.is_lvar(v) || logic.is_array(v), '#2 must be variable/array')
+	assert(logic.is_lvar(v) || logic.is_array(v), '#2 of run must be variable/array')
 	n = ((typeof n==='undefined')?inf:n)
 	var s = g(logic.nil)
 		,result = []
@@ -752,15 +757,15 @@ logic.run = function (g, v, n) {
 		var pack = s.first
 			,frame = pack.frame
 		if(logic.is_lvar(v)) { //get variable into result
-			var v2 = walk(v, frame)
-			var _temp = logic.is_lvar(v2) ? get_answer(v, pack) : v2
+			var v2 = frame.walk(v)
+			var _temp = logic.is_lvar(v2) ? pack.get_value(v) : v2
 			result.push(_temp)
 		}
 		else { //get array of variables into result
 			var vals = []
 			for(var j=0;j<v.length;++j) {
-				var v2 = walk(v[j], frame)
-				var _temp = logic.is_lvar(v2) ? get_answer(v2, pack) : v2
+				var v2 = frame.walk(v[j])
+				var _temp = logic.is_lvar(v2) ? pack.get_value(v2) : v2
 				vals.push(_temp)
 			}
 			result.push(vals)

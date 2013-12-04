@@ -232,3 +232,13 @@ write(run(less_equal(x,2), [x,y,z]))
 
 write(make_domain(2,5).div(make_domain(1, 1/0)))
 write(make_domain(2,5).div(make_domain(-1/0, 1/0)))
+
+function writeg(x) {
+	return function(p) {
+		write(p.get_value(x))
+		return logic.win(p)
+	}
+}
+
+g = and(eq(x,2),writeg(x),eq(y,3))
+run( g,x )
