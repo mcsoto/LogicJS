@@ -451,6 +451,8 @@ Package.prototype.walk = function (variable) {
 
 Package.prototype.get_value = function (variable) {
 	var pack = this
+	if(!logic.is_lvar(variable))
+		return variable
 	var result = pack.lookup_binding(variable).val
 	if(typeof result === 'undefined')
 		return pack.lookup_domain_binding(variable).val
@@ -716,7 +718,16 @@ logic.disj = function (g1, g2) {
 		return g1(f).append(g2(f))
 	}
 }
-logic.or = logic.disj
+logic.or = function() {
+	args = Array.prototype.slice.call(arguments)
+	if(args.length===0) 
+		return logic.fail
+	if(args.length===1)
+		return args[0]
+	var g = logic.disj(args[0], logic.or.apply(null, args.slice(1)))
+	return g
+}
+
 
 logic.conj = function (g1, g2) {
 	return function(f) {
@@ -726,7 +737,15 @@ logic.conj = function (g1, g2) {
 		}).flatten();
 	}
 }
-logic.and = logic.conj
+logic.and = function() {
+	args = Array.prototype.slice.call(arguments)
+	if(args.length===0) 
+		return logic.win
+	if(args.length===1)
+		return args[0]
+	var g = logic.conj(args[0], logic.and.apply(null, args.slice(1)))
+	return g
+}
 
 /*
 	non-fundamental goals

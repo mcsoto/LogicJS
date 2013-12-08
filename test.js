@@ -242,3 +242,18 @@ function writeg(x) {
 
 g = and(eq(x,2),writeg(x),eq(y,3))
 run( g,x )
+
+write(run(eq(x,2), [x, 3, 'blah']))
+
+write('--and/or')
+write( run(and(), [x]) )
+write( run(and(eq(x,2)), [x]) )
+write( run(and(eq(x,2), eq(y,3)), [x,y]) )
+write( run(and(eq(x,2), eq(y,3), eq(z,4)), [x,y,z]) )
+write( run(and(eq(x,2), eq(y,3), eq(z,4), eq(w,5)), [x,y,z,w]) )
+
+write( run(or(), x) )
+write( run(or(eq(x,2)), x) )
+write( run(or(eq(x,2), eq(x,3)), x) )
+write( run(or(eq(x,2), eq(x,3), eq(x,4)), x) )
+write( run(or(eq(x,2), eq(x,3), eq(x,4), eq(x,5)), x) )
