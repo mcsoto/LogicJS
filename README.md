@@ -136,17 +136,17 @@ When not enough arguments are instantied, some goals will propagate a *constrain
 var less_equal = logic.less_equal
 var write = console.log
 
+v = run(and(add(x,y,3), eq(y,1)), x)[0]
+write(v) //2
+
 v = run(less_equal(1,2), x)[0]
 write(v) //undefined
 d = run(less_equal(x,2), x)[0]
 write(d.min, d.max) //-inf, 2
 d = run(less_equal(2,x), x)[0]
 write(d.min, d.max) //2, inf
-d = run(less_equal(x,y), x])[0]
+d = run(less_equal(x,y), x)[0]
 write(d.min, d.max) //-inf, inf
-
-v = run(and(add(x,y,3), eq(y,1)), x])[0]
-write(v) //[ 2 ]
 ```
 
 Unification (done by the goal *logic.eq*) is the most basic kind of constraint. *Constraint logic programming* adds further constraints.
