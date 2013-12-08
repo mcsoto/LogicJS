@@ -8,7 +8,7 @@ Logic programming is typically known by the language Prolog.
 Installation
 =======
 
-Download the logic.js file and move it to your project.
+Download the *logic.js* file and move it to your project.
 
 Introduction
 =======
@@ -78,12 +78,14 @@ run(father(x,'bob'), x) //['mcbob']
 run(grandfather(x,y), [x,y]) //[ ['mcbob', 'bill'] ]
 ```
 
-The *win* and *fail* goals simply succeed or not succeed.
+The *win* and *fail* goals simply succeed or not succeed. They are analogous to the **true** and **false** constants in logic.
 
 ```javascript
 run(logic.win, x) //[ undefined ]
 run(logic.fail, x) //[]
 ```
+
+Note that failure means there are no answers (empty array), while success means there is at least one answer (in this case the answer is *undefined*, since we still don't know the value of *x*).
 
 Pattern Matching
 ---------
@@ -117,7 +119,18 @@ Constraints
 
 In pure logic programming, it doesn't matter which arguments of a goal have been instantiated.
 
-When not enough arguments are instantied, the system will propagate a *constraint* (such as "x is less than 2"). When it's still not possible to find a value for the variable, it'll return a *domain* with the possible values of that variable. This is called *constraint logic programming*.
+This works for the arithmetic relations.
+
+```javascript
+var add = logic.add, sub = logic.sub, mul = logic.mul, div = logic.div
+
+run(add(x,2,6), x) //[ 4 ]
+run(sub(2,x,6), x) //[ -4 ]
+run(mul(2,6,x), x) //[ 12 ]
+run(div(x,2,6), x) //[ 12 ]
+```
+
+When not enough arguments are instantied, some goals will propagate a *constraint* (such as "x+1=y" or "x is less or equal to 2"). When it's still not possible to find a value for the variable, it'll return a *domain* with the possible values of that variable.
 
 ```javascript
 var less_equal = logic.less_equal
@@ -136,17 +149,7 @@ v = run(and(add(x,y,3), eq(y,1)), x])[0]
 write(v) //[ 2 ]
 ```
 
-This works for the arithmetic relations.
-
-```javascript
-var add = logic.add, sub = logic.sub, mul = logic.mul, div = logic.div
-
-write(run(add(x,2,6), x), //[ 4 ]
-	run(sub(2,x,6), x), //[ -4 ]
-	run(mul(2,6,x), x), //[ 12 ]
-	run(div(x,2,6), x) //[ 12 ]
-)
-```
+Unification (done by the goal *logic.eq*) is the most basic kind of constraint. *Constraint logic programming* adds further constraints.
 
 An example of an impure goal included in LogicJS is *between*, which requires the first two arguments to be numbers.
 
