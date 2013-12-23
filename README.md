@@ -87,33 +87,6 @@ run(logic.fail, x) //[]
 
 Note that failure means there are no answers (empty array), while success means there is at least one answer (in this case the answer is *undefined*, since we still don't know the value of *x*).
 
-Pattern Matching
----------
-
-LogicJS can pattern match on JavaScript objects and arrays.
-
-```javascript
-var x = lvar(), 
-	y = lvar(),
-	z = lvar()
-	
-g1 = eq({x:x}, {x:3})
-
-run(g1, x) //[3]
-
-g2 = eq(
-	{name:'bob', city:'dinamarca', gifts:['cake',z] }, 
-	{name:x, gifts:[y,'bread']})
-
-run(g2, [x,y,z]) //[[bob, 'cake', 'bread']]
-
-g3 = eq(
-	{name:'bob', city:'dinamarca', gifts:['cake',z] }, 
-	{name:x, gifts:[z,'bread']})
-	
-run(g3, [x,y,z]) //[] //cannot match this one
-```
-
 Constraints
 -----------
 

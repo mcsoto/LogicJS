@@ -647,14 +647,14 @@ logic.unify = function (a, b, frame) {
 		return false
 	a = frame.walk(a)
 	b = frame.walk(b)
-	if(a===b) 
+	if(a===b)
 		return frame
 	else if(logic.is_lvar(a)) { //is variable
 		return frame.extend(logic.make_binding(a,b))
 	}
 	else if(logic.is_lvar(b)) //is variable
 		return frame.extend(logic.make_binding(b,a)) 
-	else if(typeof a === 'object') {
+	/*else if(typeof a === 'object') {
 		if(logic.is_array(a) && logic.is_array(b)) {
 			//match two arrays
 			if(a.length!==b.length) return false;
@@ -676,7 +676,7 @@ logic.unify = function (a, b, frame) {
 		}
 		else
 			return false
-	}
+	}*/
 	else return false
 }
 
