@@ -11,6 +11,7 @@ var or=logic.or
 	,nil=logic.nil
 	,between=logic.between
 	,run=logic.run
+	,list=logic.list
 
 var x = lvar('x')
 	,y = lvar('y')
@@ -257,3 +258,14 @@ write( run(or(eq(x,2)), x) )
 write( run(or(eq(x,2), eq(x,3)), x) )
 write( run(or(eq(x,2), eq(x,3), eq(x,4)), x) )
 write( run(or(eq(x,2), eq(x,3), eq(x,4), eq(x,5)), x) )
+
+write('--list matching')
+l1=list(1,y,3)
+l2=list(1,2,x)
+l3=list(z,y,w,3,y)
+l4=list(2,x,x,w,w)
+write( run(eq(l1, x), x) )
+write( run(eq(l1, l2), [x,y]) )
+write( run(eq(l3, l4), [x,y,z,w]) )
+write( run(eq(l1, l3), [x,y,z,w]) )
+write( run(and(eq(z,l1), eq(z,l2)), [x,y,z,w]) )

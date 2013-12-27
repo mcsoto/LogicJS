@@ -603,7 +603,11 @@ logic.is_binding = function (v) {
 }
 
 logic.is_lvar = function (v) {
-	return has_type(v, 'lvar')
+	return has_type(v, 'logic_var')
+}
+
+logic.is_logic_list = function (v) {
+	return has_type(v, 'logic_list')
 }
 
 logic.is_array = function (v) {
@@ -615,7 +619,13 @@ logic.is_object = function (v) {
 }
 
 logic.lvar = function (name) { //name is optional (for debugging)
-	return {type : 'lvar', name : name} 
+	return {type : 'logic_var', name : name} 
+}
+
+logic.list = function () {
+	var l = Array.prototype.slice.call(arguments)
+	l.type = 'logic_list'
+	return l
 }
 
 logic.make_binding = function (variable, val, name) {
@@ -649,34 +659,18 @@ logic.unify = function (a, b, frame) {
 	b = frame.walk(b)
 	if(a===b)
 		return frame
-	else if(logic.is_lvar(a)) { //is variable
+	else if(logic.is_lvar(a)) //is variable
 		return frame.extend(logic.make_binding(a,b))
-	}
 	else if(logic.is_lvar(b)) //is variable
 		return frame.extend(logic.make_binding(b,a)) 
-	/*else if(typeof a === 'object') {
-		if(logic.is_array(a) && logic.is_array(b)) {
-			//match two arrays
-			if(a.length!==b.length) return false;
-			for(var i=0;i<a.length;++i)
-				frame = logic.unify(a[i], b[i], frame)
-			return frame
+	else if(logic.is_logic_list(a) && logic.is_logic_list(b)) { //are both lists
+		//match two arrays
+		if(a.length!==b.length) return false;
+		for(var i=0;i<a.length;++i) {
+			frame = logic.unify(a[i], b[i], frame)
 		}
-		else if(logic.is_object(a) && logic.is_object(b)) {
-			//match two objects
-			for(var prop in a) {
-				if(a.hasOwnProperty(prop))
-					if(typeof b[prop]!=='undefined') frame = logic.unify(a[prop], b[prop], frame)
-			}
-			for(var prop in b) {
-				if(b.hasOwnProperty(prop))
-					if(typeof a[prop]!=='undefined') frame = logic.unify(b[prop], a[prop], frame)
-			}
-			return frame
-		}
-		else
-			return false
-	}*/
+		return frame
+	}
 	else return false
 }
 
