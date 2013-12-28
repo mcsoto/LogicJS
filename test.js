@@ -12,6 +12,7 @@ var or=logic.or
 	,between=logic.between
 	,run=logic.run
 	,list=logic.list
+	,implies=logic.implies
 
 var x = lvar('x')
 	,y = lvar('y')
@@ -269,3 +270,12 @@ write( run(eq(l1, l2), [x,y]) )
 write( run(eq(l3, l4), [x,y,z,w]) )
 write( run(eq(l1, l3), [x,y,z,w]) )
 write( run(and(eq(z,l1), eq(z,l2)), [x,y,z,w]) )
+
+write('--ifs')
+g1 = logic.eq(x,0)
+g2 = logic.eq(y,1)
+g3 = logic.eq(y,2)
+write(run(implies(g1,g2,g3), [x,y]))
+write(run(implies(logic.fail,g2,g3), [x,y]))
+write(run(implies(g1,g2), [x,y]))
+write(run(implies(logic.fail,g2), [x,y]))

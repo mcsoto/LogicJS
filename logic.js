@@ -741,6 +741,18 @@ logic.and = function() {
 	return g
 }
 
+logic.implies = function (g1,g2,g3) { //g1 -> g2 ; g3
+	return function(p) {
+		var s1 = g1(p)
+		if(s1.is_empty())
+			return g3?g3(p):logic.win(p)
+		else
+			return s1.map(function(p) {
+				return g2(p)
+			}).flatten();
+	}
+}
+
 /*
 	non-fundamental goals
 */
