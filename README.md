@@ -48,7 +48,7 @@ g2 = and(
 //get only the first 2 answers
 run(g2, [x,y], 2) //[ [1, 1], [1, 2] ]
 //get all answers
-run(g2, [x,y]) //[ [1, 1], [1, 2], [2, 1], [2, 2], [3, 1], [3, 1] ]
+run(g2, [x,y]) //[ [1, 1], [1, 2], [2, 1], [2, 2], [3, 1], [3, 2] ]
 ```
 
 Goals
