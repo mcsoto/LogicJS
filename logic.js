@@ -29,7 +29,7 @@ Domain.prototype.toString = function() {
 
 Domain.prototype.is_member = function(v) {
 	var d1 = this
-	return v>=d.min && v<=d.max
+	return v>=d1.min && v<=d1.max
 }
 
 Domain.prototype.add = function(d2) {
