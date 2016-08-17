@@ -10,6 +10,11 @@ Installation
 
 Download the *logic.js* file and move it to your project.
 
+If using npm,
+```sh
+npm install logicjs
+```
+
 Introduction
 =======
 

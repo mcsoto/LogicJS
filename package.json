@@ -1,0 +1,11 @@
+{
+  "name": "logicjs",
+  "version": "1.0.0",
+  "description": "Logic programming for JavaScript.",
+  "main": "logic.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
